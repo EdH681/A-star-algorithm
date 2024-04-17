@@ -3,7 +3,7 @@ from table import table
 
 
 class Node:
-    def __init__(self, position: tuple, distance: int, parent):
+    def __init__(self, position: tuple, distance: float, parent):
         self.__position = position
         self.__distance = distance
         self.__parent = parent
@@ -36,7 +36,7 @@ class ASTAR:
         self.__current: Node | None = None
 
     def __select_closest(self):
-        """Selects the closest node to the end from the OPEN list"""
+        """STAGE 1: Selects the closest node to the end from the OPEN list"""
         closest = math.inf  # the f value of the closest node to the end
         current = None  # the node object of the current closest node to the end
         idx = 0  # the index in the OPEN list of the current closest node to the end
@@ -50,16 +50,18 @@ class ASTAR:
         self.__current = current
 
     def __get_successors(self):
+        """STAGE 2: acquires all adjacent nodes"""
         row, col = self.__current.get_pos()
         successors = []  # creating a list of successors which can be checked later
         for c in range(col-1, col+2):  # checks all the surrounding columns
             if 0 <= c < len(self.__grid[0]):
                 for r in range(row-1, row+2):  # checks all the surrounding rows
-                    if 0 <= r < len(self.__grid) and (r, c) != self.__current.get_pos():
-                        successors.append(Node((r, c), self.__current.get_distance()+1, self.__current))  # adds to successor list to be checked
+                    if 0 <= r < len(self.__grid) and (r, c) != self.__current.get_pos() and self.__grid[r][c] != 1:
+                        successors.append(Node((r, c), self.__current.get_distance()+math.sqrt((r-self.__current.get_pos()[0])**2+(c-self.__current.get_pos()[1])**2), self.__current))  # adds to successor list to be checked
         return successors
 
     def __add_successors(self):
+        """STAGE 3: checks if each acquired node needs to be added to OPEN or CLOSED list"""
         # discards the nodes which already have a better version in OPEN or CLOSED lists
         successors = self.__get_successors()
         t = self.__target
@@ -79,6 +81,7 @@ class ASTAR:
             self.__open.append(s)
 
     def __backtrack(self):
+        """STAGE 4: if a path is found, backtrack through every node to get there"""
         nodes = []
         node = self.__current
         while node:
@@ -89,13 +92,51 @@ class ASTAR:
     def run(self):
         while self.__open:  # loops until the OPEN list is empty, indicating there is no solution
             self.__select_closest()
+            #print(self.__current.get_pos())
             if self.__current.get_pos() == self.__target:
-                return self.__backtrack()
+                return self.__backtrack(), [n.get_pos() for n in self.__closed]
             else:
                 self.__add_successors()
         return None
 
 
 if __name__ == "__main__":
-    a = ASTAR((0, 0), (5, 5), table)
-    print(a.run())
+    start = (15, 3)
+    target = (75, 82)
+    a = ASTAR(start, target, table)
+    res = a.run()
+    if res:
+        print("path found")
+        print(f"{len(res[1])} nodes checked")
+    else:
+        print("no path found")
+    import pygame
+    pygame.init()
+    win = pygame.display.set_mode((1000, 1000))
+    running = True
+
+    while running:
+        win.fill("white")
+        for r, row in enumerate(table):
+            for c, col in enumerate(row):
+                if col == 1:
+                    pygame.draw.rect(win, "black", (c*10, r*10, 10, 10))
+        if res:
+            if pygame.key.get_pressed()[pygame.K_SPACE]:
+                for r in res[1]:
+                    pygame.draw.rect(win, "blue", (r[1] * 10, r[0] * 10, 10, 10))
+                for r in res[0]:
+                    pygame.draw.rect(win, "red", (r[1]*10, r[0]*10, 10, 10))
+
+        pygame.draw.rect(win, "green", (start[1]*10, start[0]*10, 10, 10))
+        pygame.draw.rect(win, "green", (target[1] * 10, target[0] * 10, 10, 10))
+        for r, row in enumerate(table):
+            for c, col in enumerate(row):
+                if col == 1:
+                    pass
+
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
