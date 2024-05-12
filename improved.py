@@ -11,7 +11,7 @@ class Node:
     def get_f(self, target):
         target_x, target_y = target
         current_x, current_y = self.__position
-        h = math.sqrt((target_x-current_x)**2 + (target_y - current_y)**2)
+        h = math.sqrt((target_x - current_x) ** 2 + (target_y - current_y) ** 2)
         return self.__distance + h
 
     def get_distance(self):
@@ -53,11 +53,17 @@ class ASTAR:
         """STAGE 2: acquires all adjacent nodes"""
         row, col = self.__current.get_pos()
         successors = []  # creating a list of successors which can be checked later
-        for c in range(col-1, col+2):  # checks all the surrounding columns
-            if 0 <= c < len(self.__grid[0]):
-                for r in range(row-1, row+2):  # checks all the surrounding rows
-                    if 0 <= r < len(self.__grid) and (r, c) != self.__current.get_pos() and self.__grid[r][c] != 1:
-                        successors.append(Node((r, c), self.__current.get_distance()+math.sqrt((r-self.__current.get_pos()[0])**2+(c-self.__current.get_pos()[1])**2), self.__current))  # adds to successor list to be checked
+
+        distance = self.__current.get_distance() + math.sqrt(
+            (row - self.__current.get_pos()[0]) ** 2 + (col - self.__current.get_pos()[1]) ** 2)
+        if row - 1 > 0 and self.__grid[row][col] != 1:
+            successors.append(Node((row - 1, col), distance, self.__current))
+        if col - 1 > 0 and self.__grid[row][col] != 1:
+            successors.append(Node((row, col - 1), distance, self.__current))
+        if row + 1 > 0 and self.__grid[row][col] != 1:
+            successors.append(Node((row + 1, col), distance, self.__current))
+        if col + 1 > 0 and self.__grid[row][col] != 1:
+            successors.append(Node((row, col + 1), distance, self.__current))
         return successors
 
     def __add_successors(self):
@@ -92,7 +98,6 @@ class ASTAR:
     def run(self):
         while self.__open:  # loops until the OPEN list is empty, indicating there is no solution
             self.__select_closest()
-            #print(self.__current.get_pos())
             if self.__current.get_pos() == self.__target:
                 return self.__backtrack(), [n.get_pos() for n in self.__closed]
             else:
@@ -101,8 +106,8 @@ class ASTAR:
 
 
 if __name__ == "__main__":
-    start = (15, 3)
-    target = (75, 82)
+    start = (0, 0)
+    target = (88, 74)
     a = ASTAR(start, target, table)
     res = a.run()
     if res:
@@ -111,6 +116,7 @@ if __name__ == "__main__":
     else:
         print("no path found")
     import pygame
+
     pygame.init()
     win = pygame.display.set_mode((1000, 1000))
     running = True
@@ -120,16 +126,14 @@ if __name__ == "__main__":
         for r, row in enumerate(table):
             for c, col in enumerate(row):
                 if col == 1:
-                    pygame.draw.rect(win, "black", (c*10, r*10, 10, 10))
+                    pygame.draw.rect(win, "black", (c * 10, r * 10, 10, 10))
         if res:
             if pygame.key.get_pressed()[pygame.K_SPACE]:
-                for r in res[1]:
-                    pygame.draw.rect(win, "blue", (r[1] * 10, r[0] * 10, 10, 10))
                 for r in res[0]:
-                    pygame.draw.rect(win, "red", (r[1]*10, r[0]*10, 10, 10))
+                    pygame.draw.rect(win, "red", (r[1] * 10, r[0] * 10, 10, 10))
 
-        pygame.draw.rect(win, "green", (start[1]*10, start[0]*10, 10, 10))
-        pygame.draw.rect(win, "green", (target[1] * 10, target[0] * 10, 10, 10))
+        pygame.draw.rect(win, "green", (start[1] * 50, start[0] * 10, 10, 10))
+        pygame.draw.rect(win, "green", (target[1] * 50, target[0] * 10, 10, 10))
         for r, row in enumerate(table):
             for c, col in enumerate(row):
                 if col == 1:
