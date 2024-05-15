@@ -32,7 +32,7 @@ class ASTAR:
         self.grid = grid
 
         self.start = 1, 1
-        self.target = 80, 60
+        self.target = 3, 7
 
         self.open = [Node(self.target, None, 0, self.start)]
         self.closed = []
@@ -56,7 +56,7 @@ class ASTAR:
             for c in range(column - 1, column + 2):
                 if 0 <= r < len(self.grid) and 0 <= c < len(self.grid[0]):
                     if self.grid[r][c] != 1 and (r, c) != self.current.get_position():
-                        node_distance = math.sqrt((row - r) ** 2 + (column - c) ** 2) + self.current.get_distance()
+                        node_distance = self.current.get_distance() + 1
                         successor = Node(self.target, self.current, node_distance, (r, c))
                         self.__add_successors(successor)
 
@@ -83,11 +83,12 @@ class ASTAR:
         repeat_check = []
         while self.open:
             self.current = self.__select_node()
-            #print(f"{self.current.get_position()}, {self.current.get_f()}")
+            print(f"{self.current.get_position()}, {self.current.get_f()}")
             if self.current.get_position() == self.target:
                 return self.__get_path()
             else:
                 self.__generate_successors()
+        print("no path")
 
 
 grid = table.table

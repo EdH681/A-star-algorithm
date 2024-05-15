@@ -104,11 +104,68 @@ class ASTAR:
                 self.__add_successors()
         return None
 
+    def visualise(self):
+        import pygame
+        pygame.init()
+        win = pygame.display.set_mode((1000, 1000))
+        clock = pygame.time.Clock()
+        found = False
+        running = True
+        drawn = False
+        route = []
+        w = 10
+
+        while running:
+
+            if self.__open and not found:
+                self.__select_closest()
+                if self.__current.get_pos() == self.__target:
+                    route = self.__backtrack()
+                    route.reverse()
+                    found = True
+                else:
+                    self.__add_successors()
+
+
+            win.fill("white")
+
+            for node in self.__closed:
+                y, x = node.get_pos()
+                pygame.draw.rect(win, "lightblue", (x*w, y*w, w, w))
+
+            for node in self.__open:
+                y, x = node.get_pos()
+                pygame.draw.rect(win, "blue", (x*w, y*w, w, w))
+
+            for r, row in enumerate(table):
+                for c, col in enumerate(row):
+                    if col == 1:
+                        pygame.draw.rect(win, "black", (c*w, r*w, w, w))
+
+            if found:
+                for node in route:
+                    y, x = node
+                    pygame.draw.rect(win, "red", (x*w, y*w, w, w))
+                    if not drawn:
+                        pygame.display.update()
+                drawn = True
+
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    running = False
+
+            clock.tick(60)
+
 
 if __name__ == "__main__":
     start = (0, 0)
     target = (88, 74)
     a = ASTAR(start, target, table)
+    a.visualise()
+'''
     res = a.run()
     if res:
         print("path found")
@@ -144,3 +201,4 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 running = False
                 pygame.quit()
+'''
